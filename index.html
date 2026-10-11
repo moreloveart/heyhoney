@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biến Dữ Liệu Thành Quyết Định Sáng Suốt | Dịch Vụ Phân Tích Dữ Liệu</title>
+    
+    <!-- STIX Two Text Font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=STIX+Two+Text:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"STIX Two Text"', 'serif'],
+                        serif: ['"STIX Two Text"', 'serif'],
+                        heading: ['"STIX Two Text"', 'serif'],
+                        body: ['"STIX Two Text"', 'serif'],
+                    },
+                    borderRadius: {
+                        DEFAULT: "9999px",
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Liquid Glass CSS & Global Font Styling -->
+    <style>
+        * {
+            font-family: 'STIX Two Text', Georgia, Cambria, serif !important;
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            font-family: 'STIX Two Text', serif;
+        }
+
+        .liquid-glass {
+            background: rgba(255,255,255,0.015);
+            background-blend-mode: luminosity;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: none;
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.12);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .liquid-glass::before {
+            content: "";
+            position: absolute; inset: 0;
+            border-radius: inherit;
+            padding: 1.4px;
+            background: linear-gradient(180deg,
+                rgba(255,255,255,0.45) 0%,
+                rgba(255,255,255,0.15) 20%,
+                rgba(255,255,255,0) 40%,
+                rgba(255,255,255,0) 60%,
+                rgba(255,255,255,0.15) 80%,
+                rgba(255,255,255,0.45) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .liquid-glass-strong {
+            background: rgba(255,255,255,0.03);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            box-shadow: 4px 4px 16px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.2);
+            position: relative;
+            border: none;
+        }
+
+        .liquid-glass-strong::before {
+            content: "";
+            position: absolute; inset: 0;
+            border-radius: inherit;
+            padding: 1.4px;
+            background: linear-gradient(180deg,
+                rgba(255,255,255,0.55) 0%,
+                rgba(255,255,255,0.2) 20%,
+                rgba(255,255,255,0.02) 40%,
+                rgba(255,255,255,0.02) 60%,
+                rgba(255,255,255,0.2) 80%,
+                rgba(255,255,255,0.55) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+        
+        /* Smooth subtle scrollbar */
+        ::-webkit-scrollbar { width: 7px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+    </style>
+
+    <!-- React 18, Babel & Framer Motion -->
+    <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/framer-motion@11.11.17/dist/framer-motion.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const originalConsoleError = console.error;
+        console.error = (...args) => {
+            if (typeof args[0] === 'string' && args[0].includes('Each child in a list should have a unique "key" prop')) return;
+            originalConsoleError(...args);
+        };
+
+        const GlobalMotion = window.Motion || window.FramerMotion;
+        const { motion, useInView, AnimatePresence } = GlobalMotion;
+        const { useEffect, useRef, useState } = React;
+
+        const ArrowUpRight = ({ className = "w-5 h-5" }) => (
+            <svg viewBox="0 0 24 24" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 17L17 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7 7H17V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+        );
+
+        const PlayIcon = ({ className = "w-4 h-4" }) => (
+            <svg viewBox="0 0 24 24" className={className} xmlns="http://www.w3.org/2000/svg">
+                <polygon points="6 4 20 12 6 20 6 4" fill="currentColor"/>
+            </svg>
+        );
+
+        const UsersIcon = ({ className = "w-7 h-7" }) => (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+        );
+
+        const ChartIcon = ({ className = "w-7 h-7" }) => (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+        );
+
+        const KeyIcon = ({ className = "w-4 h-4" }) => (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M21 2l-2 2m-1.5 1.5L16 7l-2-2m-1.5 1.5l1.5 1.5-1 1-1.5-1.5L9 9l-1 1 2 2-2 2-4-4a4.24 4.24 0 1 0-6 6l4 4 2-2 2 2 1-1-2-2 1.5-1.5L8 15l1-1 1.5 1.5 1.5-1.5-2-2 1.5-1.5L13 12l2-2 4 4 2-2z"/>
+            </svg>
+        );
+
+        const smartKnowledgeEngine = (query) => {
+            const lower = query.toLowerCase();
+
+            if (lower.includes("spss") && (lower.includes("amos") || lower.includes("smartpls") || lower.includes("phần mềm"))) {
+                return "- SPSS: Phù hợp nhất cho thống kê mô tả, kiểm định độ tin cậy Cronbach's Alpha, phân tích tương quan Pearson, T-test, ANOVA và hồi quy tuyến tính OLS thông thường.\n- AMOS (CB-SEM): Thích hợp khi bạn có cỡ mẫu lớn (N > 200), kiểm định mô hình lý thuyết có sẵn, đo lường CFA và kiểm định các mối quan hệ cấu trúc phức tạp.\n- SmartPLS (PLS-SEM): Tối ưu cho mẫu nhỏ (dưới 200), dữ liệu phân phối không chuẩn hoặc nghiên cứu mang tính khám phá, dự báo.\n\nKhuyên dùng: Nếu mới làm nghiên cứu, hãy liên hệ Zalo 0388 723 076 để được định hướng đúng ngay từ khâu thiết kế bảng hỏi.";
+            }
+
+            if (lower.includes("efa") || lower.includes("cfa") || lower.includes("nhân tố")) {
+                return "- EFA (Khám phá): Dùng để rút gọn và khám phá số lượng nhóm nhân tố tiềm ẩn khi chưa có căn cứ lý thuyết vững chắc (điều kiện KMO > 0.5, sig Bartlett < 0.05, Factor Loading > 0.5).\n- CFA (Khẳng định): Dùng để xác nhận lại mô hình đo lường đã định sẵn, kiểm định độ giá trị hội tụ (AVE > 0.5, CR > 0.7) và giá trị phân biệt (tiêu chuẩn Fornell-Larcker hoặc HTMT).\n\nKhuyên dùng: Kết hợp chạy EFA trên SPSS rồi đưa qua AMOS/SmartPLS kiểm định CFA để bài luận đạt điểm số cao nhất.";
+            }
+
+            if (lower.includes("mẫu") || lower.includes("cỡ mẫu") || lower.includes("sample")) {
+                return "- Quy tắc hồi quy bội: Tối thiểu N >= 50 + 8m (m là số biến độc lập - Green, 1991).\n- Quy tắc EFA: Tối thiểu 5 mẫu cho 1 biến quan sát (Hair et al., ví dụ bảng hỏi có 30 câu thì cần ít nhất 150 mẫu).\n- Quy tắc SEM (AMOS): Lý tưởng từ 200 - 400 quan sát để ma trận hiệp phương sai ổn định.\n- Quy tắc PLS-SEM (SmartPLS): Áp dụng 'quy tắc 10 lần' số đường tác động vào biến phụ thuộc phức tạp nhất (mẫu từ 100 - 150 đã chạy rất mượt).\n\nLiên hệ Zalo 0388 723 076 nếu bạn cần tính toán cỡ mẫu chi phí thấp và an toàn nhất.";
+            }
+
+            if (lower.includes("giá") || lower.includes("chi phí") || lower.includes("thời gian") || lower.includes("bao lâu")) {
+                return "- Thời gian xử lý: Từ 12 đến 48 giờ tùy độ phức tạp của mô hình và khối lượng dữ liệu.\n- Chi phí: Báo giá linh hoạt, học sinh sinh viên và học viên cao học luôn được hỗ trợ mức tối ưu.\n- Bàn giao: Đầy đủ file số liệu sạch (.sav, .csv), file chạy kết quả, bảng biểu chuẩn APA và bản diễn giải ý nghĩa số liệu bằng lời văn chi tiết.\n\nNhắn ngay Zalo: 0388 723 076 để nhận báo giá chi tiết và tư vấn sơ bộ hoàn toàn miễn phí!";
+            }
+
+            if (lower.includes("tableau") || lower.includes("power bi") || lower.includes("dashboard")) {
+                return "- Tableau: Điểm mạnh vượt trội về trực quan hóa nghệ thuật, biểu đồ đa chiều sinh động, storytelling từ dữ liệu và báo cáo học thuật chuyên sâu.\n- Power BI: Cực kỳ mạnh khi tích hợp hệ sinh thái Microsoft (Excel, Azure, SQL), xây dựng mô hình dữ liệu quan hệ (DAX) và bảng điều khiển KPI kinh doanh theo thời gian thực.\n\nChúng tôi cung cấp dịch vụ thiết kế dashboard trọn gói và hướng dẫn sử dụng chi tiết.";
+            }
+
+            return `- Đề tài của bạn có thể áp dụng quy trình phân tích chuẩn 5 bước:\n  1. Làm sạch dữ liệu và thống kê mô tả tần số, trung bình.\n  2. Kiểm định thang đo Cronbach's Alpha và phân tích nhân tố EFA.\n  3. Đánh giá tính phù hợp của mô hình và kiểm định CFA/SEM.\n  4. Phân tích mô hình hồi quy tuyến tính hoặc cấu trúc tuyến tính để kiểm định giả thuyết.\n  5. Kiểm định khác biệt (T-Test, ANOVA) giữa các nhóm nhân khẩu học.\n\nKhuyên dùng: Bạn hãy kết nối trực tiếp qua Zalo 0388 723 076 hoặc Messenger để trao đổi chi tiết bảng hỏi và mô hình nghiên cứu.`;
+        };
+
+        const queryAI = async (prompt) => {
+            const storedKey = localStorage.getItem("GEMINI_API_KEY") || "";
+            
+            // If user provided a Gemini key in settings, attempt calling real Gemini API
+            if (storedKey && storedKey.trim().length > 10) {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${storedKey.trim()}`;
+                const systemPrompt = "Bạn là chuyên gia tư vấn phân tích định lượng (SPSS, AMOS, SmartPLS, Tableau, Power BI) và xử lý luận văn tốt nghiệp. Trả lời súc tích, chuyên nghiệp bằng tiếng Việt. Sử dụng gạch đầu dòng rõ ràng. Cuối câu trả lời hãy khuyên người dùng liên hệ Zalo 0388 723 076 để được hỗ trợ chuyên sâu.";
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            systemInstruction: { parts: [{ text: systemPrompt }] }
+                        })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        const answer = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (answer) return answer;
+                    }
+                } catch (err) {
+                    console.warn("Gemini API call failed, switching to knowledge engine:", err);
+                }
+            }
+
+            // Fallback to the intelligent academic statistical engine (guaranteed zero downtime on GitHub Pages)
+            await new Promise(resolve => setTimeout(resolve, 600));
+            return smartKnowledgeEngine(prompt);
+        };
+
+        const ApiKeyConfigModal = ({ isOpen, onClose, onKeySaved }) => {
+            const [keyInput, setKeyInput] = useState("");
+            const [savedMsg, setSavedMsg] = useState(false);
+
+            useEffect(() => {
+                if (isOpen) {
+                    setKeyInput(localStorage.getItem("GEMINI_API_KEY") || "");
+                    setSavedMsg(false);
+                }
+            }, [isOpen]);
+
+            if (!isOpen) return null;
+
+            const handleSave = () => {
+                localStorage.setItem("GEMINI_API_KEY", keyInput.trim());
+                setSavedMsg(true);
+                if (onKeySaved) onKeySaved(keyInput.trim());
+                setTimeout(() => {
+                    onClose();
+                }, 800);
+            };
+
+            const handleClear = () => {
+                localStorage.removeItem("GEMINI_API_KEY");
+                setKeyInput("");
+                if (onKeySaved) onKeySaved("");
+            };
+
+            return (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="liquid-glass-strong rounded-3xl w-full max-w-md p-6 flex flex-col gap-4 border border-white/20 text-white"
+                    >
+                        <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                                <KeyIcon className="w-5 h-5 text-white/90" />
+                                <h3 className="font-heading italic text-2xl text-white">Cấu hình API Key</h3>
+                            </div>
+                            <button onClick={onClose} className="text-white/60 hover:text-white text-xl">✕</button>
+                        </div>
+
+                        <p className="text-xs text-white/70 leading-relaxed">
+                            Khi đưa trang lên <strong>GitHub Pages</strong>, bạn có thể nhập Gemini API Key của mình vào đây. Khóa được lưu an toàn trong trình duyệt (LocalStorage) của bạn và không bị lộ vào mã nguồn GitHub.
+                        </p>
+
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-xs text-white/60 uppercase tracking-wider">Google Gemini API Key</label>
+                            <input
+                                type="password"
+                                value={keyInput}
+                                onChange={(e) => setKeyInput(e.target.value)}
+                                placeholder="AIzaSy..."
+                                className="w-full bg-black/50 text-white px-4 py-2.5 rounded-xl border border-white/20 text-sm focus:outline-none focus:border-white/50"
+                            />
+                        </div>
+
+                        <div className="bg-white/5 p-3 rounded-xl border border-white/10 text-[11px] text-white/70 space-y-1">
+                            <p>• Nếu <strong>để trống</strong>: Hệ thống tự động dùng <em>Knowledge Engine Offline</em> có sẵn đầy đủ câu trả lời thống kê.</p>
+                            <p>• Lấy key miễn phí tại: <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-white underline font-semibold">aistudio.google.com</a></p>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3 pt-2">
+                            <button
+                                onClick={handleClear}
+                                className="px-4 py-2 text-xs text-white/50 hover:text-white/80 transition-colors"
+                            >
+                                Xóa Key
+                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={onClose}
+                                    className="px-4 py-2 text-xs text-white/70 hover:text-white"
+                                >
+                                    Đóng
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    className="bg-white text-black font-semibold text-xs px-5 py-2.5 rounded-xl hover:bg-gray-200 transition-colors"
+                                >
+                                    {savedMsg ? "Đã lưu thành công!" : "Lưu Cài Đặt"}
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            );
+        };
+
+        const AIAdvisorModal = ({ isOpen, onClose, onOpenConfig }) => {
+            const [input, setInput] = useState("");
+            const [result, setResult] = useState("");
+            const [loading, setLoading] = useState(false);
+            const [hasKey, setHasKey] = useState(false);
+
+            useEffect(() => {
+                setHasKey(Boolean(localStorage.getItem("GEMINI_API_KEY")));
+            }, [isOpen]);
+
+            if (!isOpen) return null;
+
+            const handleAsk = async () => {
+                if (!input.trim()) return;
+                setLoading(true);
+                setResult("");
+                const response = await queryAI(input);
+                setResult(response);
+                setLoading(false);
+            };
+
+            const samplePrompts = [
+                "Đề tài Marketing tác động đến ý định mua sắm thì dùng SPSS hay SmartPLS?",
+                "Mẫu nghiên cứu 150 người chạy mô hình AMOS được không?",
+                "Thang đo bị loại biến do hệ số tương quan biến tổng thấp thì xử lý sao?"
+            ];
+
+            return (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="liquid-glass-strong rounded-3xl w-full max-w-xl p-6 md:p-8 flex flex-col gap-4 border border-white/15"
+                    >
+                        <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                                <span className="text-xl">✨</span>
+                                <h3 className="font-heading italic text-2xl md:text-3xl text-white">Trợ Lý AI Phân Tích Số Liệu</h3>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button 
+                                    onClick={onOpenConfig} 
+                                    title="Cấu hình API Key" 
+                                    className="px-2.5 py-1 text-xs rounded-full border border-white/20 text-white/70 hover:text-white hover:border-white/40 flex items-center gap-1"
+                                >
+                                    <KeyIcon className="w-3.5 h-3.5" />
+                                    <span>{hasKey ? "Key: Hoạt động" : "Cấu hình API"}</span>
+                                </button>
+                                <button onClick={onClose} className="text-white/60 hover:text-white text-2xl leading-none ml-2">✕</button>
+                            </div>
+                        </div>
+
+                        <p className="text-sm text-white/80 font-body leading-relaxed">
+                            Nhập tên đề tài, mô hình lý thuyết hoặc thắc mắc về phương pháp nghiên cứu (SPSS, AMOS, SmartPLS), AI sẽ phân tích và đưa ra giải pháp chính xác.
+                        </p>
+
+                        <div className="flex flex-wrap gap-1.5">
+                            {samplePrompts.map((p, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => setInput(p)}
+                                    className="text-[11px] text-white/70 bg-white/5 hover:bg-white/10 px-2.5 py-1 rounded-full border border-white/10 text-left transition-colors"
+                                >
+                                    💡 {p}
+                                </button>
+                            ))}
+                        </div>
+
+                        <textarea
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="VD: Đề tài của mình đánh giá tác động của chế độ đãi ngộ đến sự gắn kết của nhân viên với 220 mẫu..."
+                            className="w-full h-28 bg-black/50 text-white p-3.5 rounded-2xl border border-white/15 focus:outline-none focus:border-white/40 text-sm font-body resize-none"
+                        />
+
+                        <button
+                            onClick={handleAsk}
+                            disabled={loading || !input.trim()}
+                            className="bg-white text-black font-semibold text-sm py-3 rounded-2xl hover:bg-gray-200 transition-colors flex justify-center items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+                        >
+                            {loading ? "Đang xử lý phân tích..." : "✨ Tư Vấn Phương Pháp Cho Tôi"}
+                        </button>
+
+                        {result && (
+                            <div className="mt-1 p-4 bg-white/5 rounded-2xl border border-white/15 overflow-y-auto max-h-56">
+                                <p className="text-sm text-white/95 whitespace-pre-wrap font-body leading-relaxed">{result}</p>
+                            </div>
+                        )}
+                    </motion.div>
+                </div>
+            );
+        };
+
+        const FadingVideo = ({ src, className, style }) => {
+            const videoRef = useRef(null);
+            const fadingOutRef = useRef(false);
+            const rafIdRef = useRef(null);
+            
+            const FADE_MS = 500;
+            const FADE_OUT_LEAD = 0.55;
+
+            const fadeTo = (targetOpacity, durationMs) => {
+                if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+                
+                const vid = videoRef.current;
+                if (!vid) return;
+
+                const startOpacity = parseFloat(vid.style.opacity || 0);
+                const startTime = performance.now();
+
+                const step = (currentTime) => {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / durationMs, 1);
+                    vid.style.opacity = startOpacity + (targetOpacity - startOpacity) * progress;
+
+                    if (progress < 1) {
+                        rafIdRef.current = requestAnimationFrame(step);
+                    }
+                };
+                rafIdRef.current = requestAnimationFrame(step);
+            };
+
+            useEffect(() => {
+                const vid = videoRef.current;
+                if (!vid) return;
+
+                const handleLoadedData = () => {
+                    vid.style.opacity = 0;
+                    vid.play().catch(e => console.log("Autoplay prevented", e));
+                    fadeTo(1, FADE_MS);
+                };
+
+                const handleTimeUpdate = () => {
+                    if (!vid.duration) return;
+                    const timeRemaining = vid.duration - vid.currentTime;
+                    
+                    if (timeRemaining <= FADE_OUT_LEAD && timeRemaining > 0 && !fadingOutRef.current) {
+                        fadingOutRef.current = true;
+                        fadeTo(0, FADE_MS);
+                    }
+                };
+
+                const handleEnded = () => {
+                    vid.style.opacity = 0;
+                    setTimeout(() => {
+                        if(!vid) return;
+                        vid.currentTime = 0;
+                        vid.play().catch(e => console.log("Play prevented", e));
+                        fadingOutRef.current = false;
+                        fadeTo(1, FADE_MS);
+                    }, 100);
+                };
+
+                vid.addEventListener('loadeddata', handleLoadedData);
+                vid.addEventListener('timeupdate', handleTimeUpdate);
+                vid.addEventListener('ended', handleEnded);
+
+                return () => {
+                    if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+                    vid.removeEventListener('loadeddata', handleLoadedData);
+                    vid.removeEventListener('timeupdate', handleTimeUpdate);
+                    vid.removeEventListener('ended', handleEnded);
+                };
+            }, []);
+
+            return (
+                <video 
+                    ref={videoRef}
+                    src={src}
+                    className={className}
+                    style={{ ...style, opacity: 0, transition: 'none' }}
+                    autoPlay 
+                    muted 
+                    playsInline 
+                    preload="auto"
+                />
+            );
+        };
+
+        const BlurText = ({ text, className }) => {
+            const containerRef = useRef(null);
+            const isInView = useInView(containerRef, { once: true, amount: 0.1 });
+            const words = text.split(" ");
+
+            return (
+                <p 
+                    ref={containerRef}
+                    className={className}
+                    style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', rowGap: '0.1em' }}
+                >
+                    {words.map((word, i) => (
+                        <motion.span
+                            key={i}
+                            initial={{ filter: 'blur(10px)', opacity: 0, y: 50 }}
+                            animate={isInView ? { 
+                                filter: ['blur(10px)', 'blur(5px)', 'blur(0px)'], 
+                                opacity: [0, 0.5, 1], 
+                                y: [50, -5, 0] 
+                            } : {}}
+                            transition={{
+                                duration: 0.7,
+                                times: [0, 0.5, 1],
+                                ease: "easeOut",
+                                delay: (i * 100) / 1000
+                            }}
+                            style={{ display: 'inline-block', marginRight: '0.28em' }}
+                        >
+                            {word}
+                        </motion.span>
+                    ))}
+                </p>
+            );
+        };
+
+        const Navbar = ({ onOpenAI, onOpenConfig }) => (
+            <nav className="fixed top-4 left-0 right-0 px-6 lg:px-16 z-50 flex items-center justify-between">
+                <div className="liquid-glass rounded-full px-6 py-2.5 flex items-center justify-center">
+                    <span className="font-heading italic text-xl md:text-2xl text-white tracking-wide">Trần Quang Hưng</span>
+                </div>
+
+                <div className="flex items-center gap-2.5">
+                    <button 
+                        onClick={onOpenConfig}
+                        className="liquid-glass text-white/80 rounded-full p-2.5 hover:text-white hover:bg-white/10 transition-colors"
+                        title="Cài đặt API Key GitHub Pages"
+                    >
+                        <KeyIcon className="w-4 h-4" />
+                    </button>
+                    <button 
+                        onClick={onOpenAI} 
+                        className="bg-white text-black rounded-full px-5 py-2.5 text-sm font-semibold flex items-center gap-1.5 whitespace-nowrap hover:bg-gray-200 transition-colors shadow-[0_0_15px_rgba(255,255,255,0.4)]"
+                    >
+                        ✨ Tư Vấn AI
+                    </button>
+                </div>
+            </nav>
+        );
+
+        const HeroSection = ({ onOpenAI }) => {
+            const baseInitial = { filter: "blur(10px)", opacity: 0, y: 20 };
+            
+            return (
+                <section className="relative h-screen bg-black overflow-hidden flex flex-col">
+                    <FadingVideo 
+                        src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_080021_d598092b-c4c2-4e53-8e46-94cf9064cd50.mp4"
+                        className="absolute left-1/2 top-0 -translate-x-1/2 object-cover object-top z-0"
+                        style={{ width: "120%", height: "120%" }}
+                    />
+                    
+                    <div className="relative z-10 flex-1 flex flex-col items-center pt-32 px-4 justify-center">
+                        <motion.div 
+                            initial={baseInitial}
+                            animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+                            className="liquid-glass rounded-full inline-flex items-center gap-2 p-1 pr-4 mb-6"
+                        >
+                            <span className="bg-white text-black px-3.5 py-1 text-xs font-semibold rounded-full">Mới</span>
+                            <span className="text-sm text-white/90 font-body">Hỗ trợ SmartPLS & AMOS — Phân tích SEM chuyên sâu</span>
+                        </motion.div>
+
+                        <BlurText 
+                            text="Biến Dữ Liệu Thành Quyết Định Sáng Suốt"
+                            className="text-5xl md:text-7xl lg:text-[5.5rem] font-heading italic text-white leading-[1.05] max-w-4xl justify-center tracking-[-2px] text-center"
+                        />
+
+                        <motion.p 
+                            initial={baseInitial}
+                            animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 }}
+                            className="mt-6 text-sm md:text-base text-white/90 max-w-2xl font-body leading-relaxed text-center"
+                        >
+                            Phân tích dữ liệu SPSS · AMOS · SmartPLS · Tableau · Power BI. Cài đặt Office 2016–365 và thiết kế slide Canva học thuật chuyên nghiệp — nhanh chóng, tin cậy, chuẩn cấu trúc luận văn.
+                        </motion.p>
+
+                        <motion.div 
+                            initial={baseInitial}
+                            animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8, ease: "easeOut", delay: 1.1 }}
+                            className="flex items-center gap-5 mt-8"
+                        >
+                            <button onClick={onOpenAI} className="liquid-glass-strong rounded-full px-6 py-3 text-sm font-semibold text-white flex items-center gap-2 hover:bg-white/10 transition-colors border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.15)]">
+                                ✨ AI Gợi Ý Đề Tài
+                            </button>
+                            <a href="#services" className="text-sm font-medium text-white flex items-center gap-2 hover:text-white/70 transition-colors">
+                                Xem Dịch Vụ
+                                <PlayIcon className="w-3.5 h-3.5" />
+                            </a>
+                        </motion.div>
+
+                        <motion.div 
+                            initial={baseInitial}
+                            animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8, ease: "easeOut", delay: 1.3 }}
+                            className="flex items-stretch gap-4 mt-10 mb-auto flex-wrap justify-center"
+                        >
+                            <div className="liquid-glass rounded-2xl p-5 w-[210px] flex flex-col justify-between">
+                                <UsersIcon className="w-7 h-7 text-white/80 mb-3" />
+                                <div>
+                                    <h4 className="font-heading italic text-white text-4xl leading-none">500+</h4>
+                                    <p className="text-xs text-white/70 font-body mt-1">Khách hàng đã hỗ trợ</p>
+                                </div>
+                            </div>
+                            <div className="liquid-glass rounded-2xl p-5 w-[210px] flex flex-col justify-between">
+                                <ChartIcon className="w-7 h-7 text-white/80 mb-3" />
+                                <div>
+                                    <h4 className="font-heading italic text-white text-4xl leading-none">5</h4>
+                                    <p className="text-xs text-white/70 font-body mt-1">Phần mềm chuyên dụng</p>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+
+                    <motion.div 
+                        initial={baseInitial}
+                        animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, ease: "easeOut", delay: 1.4 }}
+                        className="relative z-10 flex flex-col items-center gap-4 pb-12 pt-6 w-full bg-gradient-to-t from-black/60 to-transparent"
+                    >
+                        <div className="liquid-glass rounded-full px-4 py-1 text-xs font-medium text-white/90 font-body">
+                            Hỗ trợ toàn diện công cụ phân tích & văn phòng
+                        </div>
+                        <div className="flex flex-wrap justify-center font-heading italic text-white/80 text-2xl md:text-3xl tracking-wide gap-x-8 md:gap-x-12 gap-y-3 px-4 text-center">
+                            <span>SPSS</span>
+                            <span className="opacity-30">·</span>
+                            <span>AMOS</span>
+                            <span className="opacity-30">·</span>
+                            <span>SmartPLS</span>
+                            <span className="opacity-30">·</span>
+                            <span>Tableau</span>
+                            <span className="opacity-30">·</span>
+                            <span>Power BI</span>
+                            <span className="opacity-30">·</span>
+                            <span>Canva</span>
+                        </div>
+                    </motion.div>
+                </section>
+            );
+        };
+
+        const CapabilityCard = ({ iconPath, tags, title, body }) => (
+            <div className="liquid-glass rounded-2xl p-6 md:p-8 min-h-[350px] flex flex-col group hover:bg-white/5 transition-colors duration-500">
+                <div className="flex items-start justify-between gap-4 mb-8">
+                    <div className="w-12 h-12 liquid-glass rounded-xl flex items-center justify-center">
+                        <svg viewBox="0 0 24 24" className="w-6 h-6 text-white fill-current">
+                            <path d={iconPath} />
+                        </svg>
+                    </div>
+                    <div className="flex flex-wrap justify-end gap-1.5 max-w-[65%]">
+                        {tags.map((tag, i) => (
+                            <span key={i} className="text-[11px] uppercase tracking-wider font-medium text-white/70 bg-white/5 px-2.5 py-1 rounded-full border border-white/10">
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+                <div className="mt-auto">
+                    <h3 className="font-heading italic text-3xl md:text-4xl text-white mb-3 tracking-tight group-hover:translate-x-1 transition-transform duration-300">{title}</h3>
+                    <p className="text-sm text-white/75 font-body leading-relaxed">{body}</p>
+                </div>
+            </div>
+        );
+
+        const CapabilitiesSection = () => {
+            return (
+                <section id="services" className="relative min-h-screen bg-black w-full flex flex-col">
+                    <FadingVideo 
+                        src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_094631_d30ab262-45ee-4b7d-99f3-5d5848c8ef13.mp4"
+                        className="absolute inset-0 w-full h-full object-cover z-0"
+                    />
+                    
+                    <div className="relative z-10 px-6 md:px-16 lg:px-20 pt-24 pb-32 flex flex-col flex-1">
+                        <div className="mb-auto">
+                            <motion.p 
+                                initial={{ opacity: 0, y: 10 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.6 }}
+                                className="text-sm font-body text-white/80 mb-3 tracking-widest uppercase"
+                            >
+                                // Dịch Vụ
+                            </motion.p>
+                            <motion.h2 
+                                initial={{ opacity: 0, filter: "blur(10px)", y: 20 }}
+                                whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.8, delay: 0.1 }}
+                                className="font-heading italic text-white text-5xl md:text-7xl lg:text-[6rem] leading-[1] tracking-[-2px]"
+                            >
+                                Giải pháp<br/>toàn diện
+                            </motion.h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
+                            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.2 }}>
+                                <CapabilityCard 
+                                    iconPath="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"
+                                    tags={['SEM', 'Hồi Quy', 'Nhân Tố', 'Mô Hình']}
+                                    title="Phân Tích Dữ Liệu"
+                                    body="Xử lý dữ liệu định lượng với SPSS, AMOS, SmartPLS. Phân tích SEM, hồi quy tuyến tính, kiểm định thang đo EFA/CFA và diễn giải kết quả chi tiết, chuẩn chỉ."
+                                />
+                            </motion.div>
+                            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.4 }}>
+                                <CapabilityCard 
+                                    iconPath="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.5-4.25 8.97-8.99h-8.97z"
+                                    tags={['Tableau', 'Power BI', 'Dashboard', 'Biểu Đồ']}
+                                    title="Trực Quan Hoá"
+                                    body="Xây dựng dashboard và báo cáo dữ liệu tương tác bằng Tableau và Power BI. Chuyển hóa các con số phức tạp thành bảng biểu trực quan, sắc sảo."
+                                />
+                            </motion.div>
+                            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.6 }}>
+                                <CapabilityCard 
+                                    iconPath="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"
+                                    tags={['Office 365', 'Canva', 'Slide', 'Setup']}
+                                    title="Setup & Thiết Kế"
+                                    body="Hỗ trợ kích hoạt Office 2016–365 ổn định. Thiết kế slide thuyết trình Canva chuẩn học thuật cho bảo vệ khóa luận, hội thảo và thạc sĩ."
+                                />
+                            </motion.div>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const ParticleCanvas = () => {
+            const canvasRef = useRef(null);
+
+            useEffect(() => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext("2d");
+                let animId;
+                let W, H;
+
+                const PARTICLE_COUNT = 85;
+                const particles = [];
+
+                const resize = () => {
+                    W = canvas.width = canvas.offsetWidth;
+                    H = canvas.height = canvas.offsetHeight;
+                };
+
+                const rand = (min, max) => Math.random() * (max - min) + min;
+
+                const initParticles = () => {
+                    particles.length = 0;
+                    for (let i = 0; i < PARTICLE_COUNT; i++) {
+                        particles.push({
+                            x: rand(0, W),
+                            y: rand(0, H),
+                            r: rand(0.5, 1.8),
+                            vx: rand(-0.15, 0.15),
+                            vy: rand(-0.25, -0.05),
+                            alpha: rand(0.1, 0.6),
+                            alphaDir: rand(-0.003, 0.003),
+                        });
+                    }
+                };
+
+                const LINE_COUNT = 6;
+                const lines = [];
+
+                const initLines = () => {
+                    lines.length = 0;
+                    for (let i = 0; i < LINE_COUNT; i++) {
+                        lines.push({
+                            x: rand(0, W),
+                            y: rand(-H, H),
+                            speed: rand(0.4, 0.9),
+                            length: rand(80, 200),
+                            alpha: rand(0.04, 0.12),
+                            width: rand(0.5, 1.2),
+                        });
+                    }
+                };
+
+                let t = 0;
+                resize();
+                initParticles();
+                initLines();
+
+                const draw = () => {
+                    t++;
+                    ctx.clearRect(0, 0, W, H);
+                    ctx.fillStyle = "#000";
+                    ctx.fillRect(0, 0, W, H);
+
+                    lines.forEach(l => {
+                        l.y += l.speed;
+                        if (l.y > H + l.length) {
+                            l.y = -l.length;
+                            l.x = rand(0, W);
+                        }
+                        const grad = ctx.createLinearGradient(l.x, l.y - l.length, l.x, l.y);
+                        grad.addColorStop(0, `rgba(255,255,255,0)`);
+                        grad.addColorStop(0.5, `rgba(255,255,255,${l.alpha})`);
+                        grad.addColorStop(1, `rgba(255,255,255,0)`);
+                        ctx.beginPath();
+                        ctx.strokeStyle = grad;
+                        ctx.lineWidth = l.width;
+                        ctx.moveTo(l.x, l.y - l.length);
+                        ctx.lineTo(l.x, l.y);
+                        ctx.stroke();
+                    });
+
+                    particles.forEach(p => {
+                        p.x += p.vx + Math.sin(t * 0.008 + p.y * 0.01) * 0.08;
+                        p.y += p.vy;
+                        p.alpha += p.alphaDir;
+                        if (p.alpha <= 0.05 || p.alpha >= 0.65) p.alphaDir *= -1;
+                        if (p.y < -5) { p.y = H + 5; p.x = rand(0, W); }
+                        if (p.x < -5) p.x = W + 5;
+                        if (p.x > W + 5) p.x = -5;
+
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255,255,255,${p.alpha})`;
+                        ctx.fill();
+                    });
+
+                    animId = requestAnimationFrame(draw);
+                };
+
+                const ro = new ResizeObserver(() => { resize(); initLines(); });
+                ro.observe(canvas);
+                draw();
+
+                return () => {
+                    cancelAnimationFrame(animId);
+                    ro.disconnect();
+                };
+            }, []);
+
+            return (
+                <canvas
+                    ref={canvasRef}
+                    className="absolute inset-0 w-full h-full"
+                    style={{ display: "block" }}
+                />
+            );
+        };
+
+        const AuroraBubbleCanvas = () => {
+            const canvasRef = useRef(null);
+
+            useEffect(() => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext("2d");
+                let animId;
+                let W, H, t = 0;
+
+                const resize = () => {
+                    W = canvas.width = canvas.offsetWidth;
+                    H = canvas.height = canvas.offsetHeight;
+                };
+
+                const auroraBlobs = [
+                    { cx: 0.15, cy: 0.3, rx: 0.55, ry: 0.35, r: 50, g: 0, b: 200, speed: 0.00022, phase: 0.0 },
+                    { cx: 0.80, cy: 0.6, rx: 0.50, ry: 0.30, r: 180, g: 0, b: 255, speed: 0.00031, phase: 1.5 },
+                    { cx: 0.50, cy: 0.15, rx: 0.60, ry: 0.28, r: 0, g: 200, b: 180, speed: 0.00018, phase: 3.0 },
+                ];
+
+                resize();
+
+                const draw = () => {
+                    t++;
+                    ctx.clearRect(0, 0, W, H);
+                    ctx.fillStyle = "#050508";
+                    ctx.fillRect(0, 0, W, H);
+
+                    auroraBlobs.forEach((b) => {
+                        const ox = Math.sin(t * b.speed + b.phase) * 0.1;
+                        const oy = Math.cos(t * b.speed * 1.4 + b.phase) * 0.08;
+                        const gx = (b.cx + ox) * W;
+                        const gy = (b.cy + oy) * H;
+                        const radius = b.rx * W;
+                        const grad = ctx.createRadialGradient(gx, gy, 0, gx, gy, radius);
+                        const pulse = 0.06 + 0.02 * Math.sin(t * b.speed * 3 + b.phase);
+                        grad.addColorStop(0, `rgba(${b.r},${b.g},${b.b},${pulse})`);
+                        grad.addColorStop(1, `rgba(${b.r},${b.g},${b.b},0)`);
+                        ctx.fillStyle = grad;
+                        ctx.fillRect(0, 0, W, H);
+                    });
+
+                    animId = requestAnimationFrame(draw);
+                };
+
+                const ro = new ResizeObserver(() => { resize(); });
+                ro.observe(canvas);
+                draw();
+
+                return () => { cancelAnimationFrame(animId); ro.disconnect(); };
+            }, []);
+
+            return (
+                <canvas
+                    ref={canvasRef}
+                    className="absolute inset-0 w-full h-full"
+                    style={{ display: "block" }}
+                />
+            );
+        };
+
+        const FAQ_DATA = [
+            {
+                q: "SPSS, AMOS và SmartPLS khác nhau như thế nào? Tôi nên dùng phần mềm nào?",
+                a: "SPSS phù hợp cho phân tích thống kê mô tả, hồi quy, kiểm định T-test và ANOVA — lý tưởng cho nghiên cứu cơ bản. AMOS dùng để phân tích mô hình cấu trúc (CB-SEM) khi mẫu lớn (N > 200). SmartPLS ứng dụng PLS-SEM khi mẫu nhỏ hoặc mô hình có nhiều biến trung gian/điều tiết. Chúng tôi sẽ tư vấn công cụ chính xác theo đề tài của bạn."
+            },
+            {
+                q: "EFA và CFA là gì? Khi nào cần phân tích nhân tố khám phá hay khẳng định?",
+                a: "EFA (Khám phá) dùng khi bạn chưa biết trước cấu trúc nhóm nhân tố. CFA (Khẳng định) dùng khi bạn đã có cơ sở lý thuyết sẵn và cần kiểm định sự phù hợp của mô hình đo lường. Nghiên cứu định lượng thường chạy EFA trước rồi tiếp tục kiểm định CFA để đảm bảo độ tin cậy và hội tụ."
+            },
+            {
+                q: "Kích thước mẫu tối thiểu cho nghiên cứu SEM là bao nhiêu?",
+                a: "Với AMOS (CB-SEM), thông thường cần tối thiểu 200 quan sát để ước lượng ổn định. Với SmartPLS (PLS-SEM), có thể chạy tốt từ 100 quan sát. Chúng tôi sẽ hỗ trợ bạn kiểm tra công thức tính cỡ mẫu an toàn nhất cho bài luận."
+            },
+            {
+                q: "Dịch vụ xử lý dữ liệu mất bao lâu và chi phí như thế nào?",
+                a: "Thời gian hoàn thành thường từ 12–48 giờ tùy độ phức tạp của mô hình. Chi phí luôn ưu đãi và rõ ràng, có bản giải thích kết quả chi tiết từng bảng số liệu. Liên hệ Zalo/Messenger để được tư vấn và báo giá miễn phí trong 30 phút."
+            },
+            {
+                q: "Tôi có được hướng dẫn cách giải thích số liệu khi bảo vệ không?",
+                a: "Chắc chắn! Mọi kết quả bàn giao đều đính kèm file giải thích chi tiết từng chỉ số (R bình phương, P-value, F, Beta...). Bạn cũng có thể yêu cầu hướng dẫn 1-1 để tự tin thuyết trình trước hội đồng."
+            }
+        ];
+
+        const FAQSection = ({ onOpenConfig }) => {
+            const [openIndex, setOpenIndex] = useState(null);
+            const [aiQuestion, setAiQuestion] = useState("");
+            const [aiAnswer, setAiAnswer] = useState("");
+            const [aiLoading, setAiLoading] = useState(false);
+
+            const handleAskFAQ = async () => {
+                if (!aiQuestion.trim()) return;
+                setAiLoading(true);
+                setAiAnswer("");
+                const response = await queryAI(aiQuestion);
+                setAiAnswer(response);
+                setAiLoading(false);
+            };
+
+            return (
+                <section className="relative bg-black w-full flex flex-col items-center px-6 py-24 overflow-hidden">
+                    <AuroraBubbleCanvas />
+                    <div className="relative z-10 max-w-3xl w-full flex flex-col gap-10">
+                        <div>
+                            <motion.p
+                                initial={{ opacity: 0, y: 10 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.6 }}
+                                className="text-sm font-body text-white/80 tracking-widest uppercase mb-3"
+                            >
+                                // Câu Hỏi Thường Gặp
+                            </motion.p>
+                            <motion.h2
+                                initial={{ opacity: 0, filter: "blur(10px)", y: 20 }}
+                                whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.8, delay: 0.1 }}
+                                className="font-heading italic text-white text-5xl md:text-6xl leading-[1] tracking-[-2px]"
+                            >
+                                Bạn thắc mắc<br/>điều gì?
+                            </motion.h2>
+                        </div>
+
+                        {/* FAQ List */}
+                        <div className="flex flex-col gap-3">
+                            {FAQ_DATA.map((item, i) => (
+                                <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.5, delay: i * 0.08 }}
+                                    className="liquid-glass rounded-2xl overflow-hidden border border-white/10"
+                                >
+                                    <button
+                                        onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                                        className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left hover:bg-white/5 transition-colors duration-200"
+                                    >
+                                        <span className="font-body font-medium text-white/90 text-sm md:text-base leading-snug">{item.q}</span>
+                                        <span className="text-white/50 text-2xl flex-shrink-0 transition-transform duration-300" style={{ transform: openIndex === i ? "rotate(45deg)" : "rotate(0deg)" }}>+</span>
+                                    </button>
+                                    {openIndex === i && (
+                                        <div className="px-6 pb-5 border-t border-white/10 pt-4">
+                                            <p className="text-sm text-white/75 font-body leading-relaxed">{item.a}</p>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        {/* Interactive AI Chatbot Box in FAQ */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.7, delay: 0.4 }}
+                            className="liquid-glass-strong rounded-3xl p-6 md:p-8 flex flex-col gap-4 border border-white/15"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xl">✨</span>
+                                    <h3 className="font-heading italic text-2xl text-white">Hỏi đáp trực tiếp với AI</h3>
+                                </div>
+                                <button 
+                                    onClick={onOpenConfig} 
+                                    className="text-xs text-white/60 hover:text-white flex items-center gap-1 border border-white/20 px-3 py-1 rounded-full"
+                                >
+                                    <KeyIcon className="w-3 h-3" />
+                                    <span>API Key</span>
+                                </button>
+                            </div>
+                            <p className="text-xs text-white/65 font-body -mt-2">Hỗ trợ trả lời mọi câu hỏi về SPSS, AMOS, SmartPLS, cỡ mẫu và thiết kế nghiên cứu.</p>
+                            
+                            <div className="flex gap-3 flex-col sm:flex-row">
+                                <input
+                                    value={aiQuestion}
+                                    onChange={e => setAiQuestion(e.target.value)}
+                                    onKeyDown={e => e.key === "Enter" && handleAskFAQ()}
+                                    placeholder="VD: Kiểm định Cronbach's Alpha hệ số bao nhiêu thì đạt?"
+                                    className="flex-1 bg-black/40 text-white text-sm font-body px-4 py-3 rounded-2xl border border-white/15 focus:outline-none focus:border-white/35 placeholder:text-white/35"
+                                />
+                                <button
+                                    onClick={handleAskFAQ}
+                                    disabled={aiLoading || !aiQuestion.trim()}
+                                    className="bg-white text-black text-sm font-semibold px-6 py-3 rounded-2xl hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                                >
+                                    {aiLoading ? "Đang trả lời..." : "Hỏi AI →"}
+                                </button>
+                            </div>
+                            {aiAnswer && (
+                                <div className="p-4 bg-white/5 rounded-2xl border border-white/10 max-h-56 overflow-y-auto">
+                                    <p className="text-sm text-white/90 whitespace-pre-wrap font-body leading-relaxed">{aiAnswer}</p>
+                                </div>
+                            )}
+                        </motion.div>
+                    </div>
+                </section>
+            );
+        };
+
+        const ContactSection = () => (
+            <section className="relative min-h-screen bg-black w-full flex flex-col items-center justify-center px-6 py-32 overflow-hidden">
+                <ParticleCanvas />
+
+                <div className="relative z-10 max-w-2xl w-full flex flex-col items-center text-center gap-10">
+                    <motion.p
+                        initial={{ opacity: 0, y: 10 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
+                        className="text-sm font-body text-white/80 tracking-widest uppercase"
+                    >
+                        // Liên Hệ
+                    </motion.p>
+
+                    <motion.h2
+                        initial={{ opacity: 0, filter: "blur(10px)", y: 20 }}
+                        whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8, delay: 0.1 }}
+                        className="font-heading italic text-white text-5xl md:text-7xl leading-[1] tracking-[-2px]"
+                    >
+                        Sẵn sàng<br/>bắt đầu?
+                    </motion.h2>
+
+                    <motion.p
+                        initial={{ opacity: 0, y: 10 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="text-sm md:text-base text-white/70 font-body leading-relaxed max-w-md"
+                    >
+                        Liên hệ trực tiếp để được tư vấn đề tài miễn phí và nhận báo giá nhanh trong 30 phút.
+                    </motion.p>
+
+                    {/* Contact Action Buttons */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.7, delay: 0.3 }}
+                        className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center"
+                    >
+                        <a
+                            href="https://zalo.me/0388723076"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group flex items-center gap-3 liquid-glass-strong rounded-full px-8 py-4 text-white font-medium text-sm hover:scale-105 transition-all duration-300 border border-white/15 min-w-[210px] justify-center"
+                        >
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#0068FF]">
+                                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="white">
+                                    <path d="M12 2C6.48 2 2 6.16 2 11.3c0 2.92 1.4 5.54 3.6 7.3L5 22l3.4-1.7c1.1.3 2.35.47 3.6.47 5.52 0 10-4.16 10-9.3S17.52 2 12 2zM8.5 13H6l3.5-4.5H7V7h2.5l-3.5 4.5H8.5V13zm5.5 0h-1.5V9.5L11 10.5V9l1.5-1H14v5zm3.5 0h-3V7h1.5v4.5H17V13z"/>
+                                </svg>
+                            </div>
+                            <div className="text-left">
+                                <div className="text-[11px] text-white/60">Nhắn Zalo</div>
+                                <div className="text-sm font-semibold tracking-wide">0388 723 076</div>
+                            </div>
+                        </a>
+
+                        <a
+                            href="https://m.me/nomnomismyname"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group flex items-center gap-3 liquid-glass-strong rounded-full px-8 py-4 text-white font-medium text-sm hover:scale-105 transition-all duration-300 border border-white/15 min-w-[210px] justify-center"
+                        >
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #00C6FF 0%, #7B2FF7 100%)" }}>
+                                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="white">
+                                    <path d="M12 2C6.36 2 2 6.13 2 11.15c0 2.9 1.41 5.49 3.62 7.22V22l3.35-1.84c.89.25 1.84.38 2.81.38 5.64 0 10-4.13 10-9.15S17.64 2 12 2zm1 12.29l-2.56-2.73-4.98 2.73 5.47-5.8 2.62 2.73 4.91-2.73-5.46 5.8z"/>
+                                </svg>
+                            </div>
+                            <div className="text-left">
+                                <div className="text-[11px] text-white/60">Nhắn Messenger</div>
+                                <div className="text-sm font-semibold">Quang Hưng</div>
+                            </div>
+                        </a>
+                    </motion.div>
+
+                    <div className="flex items-center gap-4 w-full max-w-sm">
+                        <div className="flex-1 h-px bg-white/10" />
+                        <span className="text-white/40 text-xs font-body">hoặc gọi trực tiếp</span>
+                        <div className="flex-1 h-px bg-white/10" />
+                    </div>
+
+                    <motion.a
+                        href="https://zalo.me/0388723076"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.5 }}
+                        className="font-heading italic text-white/90 text-4xl md:text-5xl tracking-wide hover:text-white transition-colors duration-300 group flex items-center gap-3"
+                    >
+                        0388 723 076
+                        <ArrowUpRight className="w-6 h-6 opacity-40 group-hover:opacity-100 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300" />
+                    </motion.a>
+                    <p className="text-xs text-white/40 font-body -mt-6">Click để kết nối Zalo ngay</p>
+                </div>
+            </section>
+        );
+
+        const FloatingContact = () => (
+            <div className="fixed bottom-6 left-1/2 z-50 flex items-center gap-3" style={{ transform: "translateX(-50%)" }}>
+                <motion.a
+                    href="https://zalo.me/0388723076"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 1.6 }}
+                    className="liquid-glass-strong rounded-full px-5 py-2.5 flex items-center gap-2 text-sm text-white font-medium hover:scale-105 transition-transform duration-300 shadow-2xl border border-white/20"
+                    title="Chat Zalo"
+                >
+                    <div className="bg-[#0068FF] p-1.5 rounded-full flex items-center justify-center">
+                        <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="white">
+                            <path d="M12 2C6.48 2 2 6.16 2 11.3c0 2.92 1.4 5.54 3.6 7.3L5 22l3.4-1.7c1.1.3 2.35.47 3.6.47 5.52 0 10-4.16 10-9.3S17.52 2 12 2zM8.5 13H6l3.5-4.5H7V7h2.5l-3.5 4.5H8.5V13zm5.5 0h-1.5V9.5L11 10.5V9l1.5-1H14v5zm3.5 0h-3V7h1.5v4.5H17V13z"/>
+                        </svg>
+                    </div>
+                    <span>Chat Zalo</span>
+                </motion.a>
+
+                <motion.a
+                    href="https://m.me/nomnomismyname"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 1.8 }}
+                    className="liquid-glass-strong rounded-full px-5 py-2.5 flex items-center gap-2 text-sm text-white font-medium hover:scale-105 transition-transform duration-300 shadow-2xl border border-white/20"
+                    title="Chat Messenger"
+                >
+                    <div className="p-1.5 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #00C6FF, #7B2FF7)" }}>
+                        <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="white">
+                            <path d="M12 2C6.36 2 2 6.13 2 11.15c0 2.9 1.41 5.49 3.62 7.22V22l3.35-1.84c.89.25 1.84.38 2.81.38 5.64 0 10-4.13 10-9.15S17.64 2 12 2zm1 12.29l-2.56-2.73-4.98 2.73 5.47-5.8 2.62 2.73 4.91-2.73-5.46 5.8z"/>
+                        </svg>
+                    </div>
+                    <span>Messenger</span>
+                </motion.a>
+            </div>
+        );
+
+        const App = () => {
+            const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+            const [isConfigOpen, setIsConfigOpen] = useState(false);
+
+            return (
+                <main className="font-body selection:bg-white/25 selection:text-white relative">
+                    <Navbar 
+                        onOpenAI={() => setIsAIModalOpen(true)} 
+                        onOpenConfig={() => setIsConfigOpen(true)} 
+                    />
+                    <HeroSection onOpenAI={() => setIsAIModalOpen(true)} />
+                    <CapabilitiesSection />
+                    <FAQSection onOpenConfig={() => setIsConfigOpen(true)} />
+                    <ContactSection />
+                    <FloatingContact />
+                    
+                    {/* Modals */}
+                    <AIAdvisorModal 
+                        isOpen={isAIModalOpen} 
+                        onClose={() => setIsAIModalOpen(false)} 
+                        onOpenConfig={() => {
+                            setIsAIModalOpen(false);
+                            setIsConfigOpen(true);
+                        }}
+                    />
+                    
+                    <ApiKeyConfigModal 
+                        isOpen={isConfigOpen} 
+                        onClose={() => setIsConfigOpen(false)} 
+                    />
+                </main>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
